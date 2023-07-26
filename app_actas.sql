@@ -25,7 +25,7 @@ go
 select * from tmp_oferta
 GO
 go
-
+CREATE TEMP TABLE tmp_oferta_v2 AS
 select distinct ofe.cod_comision, mat.codigo, mat.nombre,act.id_acta,nro_acta, act.estado, origen,
 ofe.ubicacion,tipo_acta,fecha_cierre,ofe.nombre as periodo,ofe.nombre_comision, count(nro_acta)
 from negocio.sga_actas act
@@ -36,8 +36,31 @@ on mat.codigo=ofe.codigo
 --and origen='P'
 inner join negocio.vw_insc_cursada ins
 on ins.comision=act.comision
+--and nro_acta='30376'
 --and fecha_anulacion is null
-and fecha_cierre > '2023-07-22' 
-and fecha_cierre < '2023-07-25'
+and fecha_cierre > '2023-04-01' 
+and fecha_cierre < '2023-07-26'
 --and fecha_cierre > '2023-07-25' ULTIMO DIA QUE HICE
 group by 1,2,3,4,5,6,7,8,9,10,11,12
+go
+---MUY IMPORTANTE HACER LO QUE SIGUE PARA QUE COINCIDA EL NUMERO DE ALUMNOS EN EL ACTA CON LO QUE ESTA EN SIU
+go
+CREATE TEMP TABLE tmp_oferta_v3 as
+select bb.id_acta,tipo_acta,count(*) from tmp_oferta_v2 bb
+inner join negocio.sga_actas_detalle de
+on bb.id_acta=de.id_acta
+--and instancia=2
+--and nro_acta='30376'
+group by 1,2
+go
+select * from tmp_oferta_v3
+go
+--UNO LAS TABLAS PARA SACAR EL TOTAL POR ACTA
+select bb.cod_comision,bb.codigo,bb.nombre,bb.id_acta,bb.nro_acta,bb.estado,bb.Origen,bb.Tipo_acta,bb.fecha_cierre,bb2.count  
+from tmp_oferta_v2 bb
+left join tmp_oferta_v3 bb2
+on bb.id_acta=bb2.id_acta
+go
+
+select comision,elemento_codigo 
+from negocio.vw_comisiones where comision='90880'
